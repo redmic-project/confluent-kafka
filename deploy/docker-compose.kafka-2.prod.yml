@@ -1,0 +1,33 @@
+version: '3.5'
+
+services:
+  kafka-2:
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:${KF_PORT}
+      - KAFKA_LISTENERS=PLAINTEXT://:${KF_PORT}
+      - KAFKA_HEAP_OPTS=-Xmx2g -Xms2g
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - engine.labels.availability_zone == ${AWS_REGION}b
+      restart_policy:
+        delay: 30s
+        window: 2m
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          memory: 2458M
+
+volumes:
+  kf-data-vol:
+    name: ${KF_DATA_VOL_NAME:-kf-2-data-vol}
+    driver: 'cloudstor:aws'
+    driver_opts:
+      backing: relocatable
+      size: ${KF_DATA_VOL_SIZE:-500}
+      ebstype: ${KF_DATA_VOL_EBS_TYPE:-st1}

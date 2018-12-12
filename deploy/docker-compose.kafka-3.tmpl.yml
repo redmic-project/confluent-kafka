@@ -1,0 +1,64 @@
+version: '3.5'
+
+services:
+  kafka-3:
+    image: confluentinc/cp-kafka:${IMAGE_TAG:-latest}
+    hostname: kf-3
+    environment:
+      - KAFKA_BROKER_ID=3
+      - KAFKA_ZOOKEEPER_CONNECT=zk-1:${ZK_PORT},zk-2:${ZK_PORT},zk-3:${ZK_PORT}
+      - KAFKA_LOG_DIRS
+      - KAFKA_LOG_CLEANER_ENABLE
+      - KAFKA_LOG_CLEANUP_POLICY
+      - KAFKA_LOG_CLEANER_MIN_CLEANABLE_RATIO
+      - KAFKA_LOG_CLEANER_MIN_COMPACTION_LAG_MS
+      - KAFKA_LOG_ROLL_HOURS
+      - KAFKA_NUM_PARTITIONS
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+      - KAFKA_DEFAULT_REPLICATION_FACTOR
+      - KAFKA_MIN_INSYNC_REPLICAS
+      - KAFKA_OFFSETS_RETENTION_MINUTES
+      - KAFKA_SOCKET_RECEIVE_BUFFER_BYTES
+      - KAFKA_MESSAGE_MAX_BYTES
+      - KAFKA_JMX_HOSTNAME=kf-3
+      - KAFKA_JMX_PORT
+      - KAFKA_OPTS=-javaagent:/jmx_prometheus_javaagent.jar=${JMX_HTTP_PORT}:/config.yaml
+    networks:
+      kafka-net:
+        aliases:
+          - kf-3
+      metric-net:
+    configs:
+      - source: jmx-prometheus-javaagent
+        target: /jmx_prometheus_javaagent.jar
+      - source: jmx-prometheus-config
+        target: /config.yaml
+    volumes:
+      - kf-data-vol:/var/lib/kafka/data
+      - kf-secrets-vol:/etc/kafka/secrets
+    healthcheck:
+      test: wget --spider -nv -t 3 http://localhost:${JMX_HTTP_PORT}
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 2m
+
+networks:
+  kafka-net:
+    name: ${KAFKA_NET_NAME:-kafka-net}
+    external: true
+
+  metric-net:
+    name: ${METRIC_NET_NAME:-metric-net}
+    external: true
+
+volumes:
+  kf-secrets-vol:
+    name: ${KF_SECRETS_VOL_NAME:-kf-3-secrets-vol}
+
+configs:
+  jmx-prometheus-javaagent:
+    external: true
+
+  jmx-prometheus-config:
+    external: true
