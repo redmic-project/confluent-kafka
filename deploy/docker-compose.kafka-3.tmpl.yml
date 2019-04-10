@@ -22,6 +22,7 @@ services:
       - KAFKA_MESSAGE_MAX_BYTES
       - KAFKA_JMX_HOSTNAME=kf-3
       - KAFKA_JMX_PORT
+      - KAFKA_LOG4J_ROOT_LOGLEVEL=${LOG_LEVEL}
       - KAFKA_OPTS=-javaagent:/jmx_prometheus_javaagent.jar=${JMX_HTTP_PORT}:/config.yaml
     networks:
       kafka-net:
