@@ -77,20 +77,14 @@ variables:
 
 deploy-kf-1-support-branch-development:
   extends: .deploy-kf-1-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-support-branch
 
 deploy-kf-2-support-branch-development:
   extends: .deploy-kf-2-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-support-branch
 
 deploy-kf-3-support-branch-development:
   extends: .deploy-kf-3-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-support-branch
 
 .deploy-stable-branch: &deploy-stable-branch
@@ -101,38 +95,26 @@ deploy-kf-3-support-branch-development:
 
 deploy-kf-1-stable-branch-development:
   extends: .deploy-kf-1-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 deploy-kf-2-stable-branch-development:
   extends: .deploy-kf-2-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 deploy-kf-3-stable-branch-development:
   extends: .deploy-kf-3-development
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 deploy-kf-1-stable-branch-production:
   extends: .deploy-kf-1-production
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 deploy-kf-2-stable-branch-production:
   extends: .deploy-kf-2-production
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 deploy-kf-3-stable-branch-production:
   extends: .deploy-kf-3-production
-  variables:
-    <<: *deploy-branch-base-variables
   <<: *deploy-stable-branch
 
 .deploy-tag: &deploy-tag
