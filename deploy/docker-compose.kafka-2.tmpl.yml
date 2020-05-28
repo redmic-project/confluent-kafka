@@ -2,28 +2,32 @@ version: '3.5'
 
 services:
   kafka-2:
-    image: confluentinc/cp-kafka:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME}:${IMAGE_TAG}
     hostname: kf-2
     environment:
-      - KAFKA_BROKER_ID=2
-      - KAFKA_ZOOKEEPER_CONNECT=zk-1:${ZK_PORT},zk-2:${ZK_PORT},zk-3:${ZK_PORT}
-      - KAFKA_LOG_DIRS
-      - KAFKA_LOG_CLEANER_ENABLE
-      - KAFKA_LOG_CLEANUP_POLICY
-      - KAFKA_LOG_CLEANER_MIN_CLEANABLE_RATIO
-      - KAFKA_LOG_CLEANER_MIN_COMPACTION_LAG_MS
-      - KAFKA_LOG_ROLL_HOURS
-      - KAFKA_NUM_PARTITIONS
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-      - KAFKA_DEFAULT_REPLICATION_FACTOR
-      - KAFKA_MIN_INSYNC_REPLICAS
-      - KAFKA_OFFSETS_RETENTION_MINUTES
-      - KAFKA_SOCKET_RECEIVE_BUFFER_BYTES
-      - KAFKA_MESSAGE_MAX_BYTES
-      - KAFKA_JMX_HOSTNAME=kf-2
-      - KAFKA_JMX_PORT
-      - KAFKA_LOG4J_ROOT_LOGLEVEL=${LOG_LEVEL}
-      - KAFKA_OPTS=-javaagent:/jmx_prometheus_javaagent.jar=${JMX_HTTP_PORT}:/config.yaml
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zk-1:${ZK_PORT},zk-2:${ZK_PORT},zk-3:${ZK_PORT}
+      KAFKA_JMX_HOSTNAME: kf-2
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://:${KF_PORT}
+      KAFKA_LISTENERS: PLAINTEXT://:${KF_PORT}
+      KAFKA_OPTS: -javaagent:${JMX_PROMETHEUS_JAVAAGENT_PATH}=${JMX_HTTP_PORT}:${JMX_PROMETHEUS_CONFIG_PATH}
+      KAFKA_LOG_DIRS:
+      KAFKA_LOG_CLEANER_ENABLE:
+      KAFKA_LOG_CLEANUP_POLICY:
+      KAFKA_LOG_CLEANER_MIN_CLEANABLE_RATIO:
+      KAFKA_LOG_CLEANER_MIN_COMPACTION_LAG_MS:
+      KAFKA_LOG_ROLL_HOURS:
+      KAFKA_NUM_PARTITIONS:
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:
+      KAFKA_DEFAULT_REPLICATION_FACTOR:
+      KAFKA_MIN_INSYNC_REPLICAS:
+      KAFKA_OFFSETS_RETENTION_MINUTES:
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES:
+      KAFKA_MESSAGE_MAX_BYTES:
+      KAFKA_JMX_PORT:
+      KAFKA_LOG4J_ROOT_LOGLEVEL:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:
+      KAFKA_INTER_BROKER_LISTENER_NAME:
     networks:
       kafka-net:
         aliases:
@@ -31,26 +35,35 @@ services:
       metric-net:
     configs:
       - source: jmx-prometheus-javaagent
-        target: /jmx_prometheus_javaagent.jar
+        target: ${JMX_PROMETHEUS_JAVAAGENT_PATH}
       - source: jmx-prometheus-config
-        target: /config.yaml
+        target: ${JMX_PROMETHEUS_CONFIG_PATH}
     volumes:
       - kf-data-vol:/var/lib/kafka/data
       - kf-secrets-vol:/etc/kafka/secrets
     healthcheck:
-      test: wget --spider -nv -t 3 http://localhost:${JMX_HTTP_PORT}
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 2m
+      test: wget --spider -nv -t 1 http://localhost:${JMX_HTTP_PORT}
+      interval: ${HEALTHCHECK_INTERVAL:-30s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+      start_period: ${HEALTHCHECK_START_PERIOD:-2m}
+    deploy:
+      mode: replicated
+      replicas: ${REPLICAS:-1}
+      restart_policy:
+        delay: ${RESTART_DELAY:-30s}
+      update_config:
+        delay: ${UPDATE_DELAY:-5m}
 
 networks:
   kafka-net:
     name: ${KAFKA_NET_NAME:-kafka-net}
+    driver: ${KAFKA_NET_DRIVER:-overlay}
     external: true
 
   metric-net:
     name: ${METRIC_NET_NAME:-metric-net}
+    driver: ${METRIC_NET_DRIVER:-overlay}
     external: true
 
 volumes:
