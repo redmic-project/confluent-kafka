@@ -6,12 +6,9 @@ include:
 stages:
   - deploy
 
-variables:
-  PROJECT_PARENT_NAME: confluent
-
 .deploy:
   variables:
-    STACK: ${PROJECT_PARENT_NAME}
+    STACK: confluent
     DD_AWS_REGION: ${AWS_REGION}
 
 .deploy-development:
@@ -25,17 +22,14 @@ variables:
 .deploy-kf-1:
   variables: &deploy-kf-1-variables
     SERVICE_NAME: kf-1
-    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}-1
 
 .deploy-kf-2:
   variables: &deploy-kf-2-variables
     SERVICE_NAME: kf-2
-    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}-2
 
 .deploy-kf-3:
   variables: &deploy-kf-3-variables
     SERVICE_NAME: kf-3
-    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}-3
 
 .deploy-kf-1-development:
   extends: .deploy-development

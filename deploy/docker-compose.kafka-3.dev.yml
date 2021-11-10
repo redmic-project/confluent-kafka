@@ -18,4 +18,4 @@ services:
 
 volumes:
   kf-data-vol:
-    name: ${KF_DATA_VOL_NAME:-kf-3-data-vol}
+    name: ${KF_3_DATA_VOL_NAME}

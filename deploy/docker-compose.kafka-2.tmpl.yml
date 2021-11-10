@@ -43,7 +43,7 @@ services:
       - kf-data-vol:/var/lib/kafka/data
       - kf-secrets-vol:/etc/kafka/secrets
     healthcheck:
-      test: wget --spider -nv -t 1 http://localhost:${JMX_HTTP_PORT}
+      test: wget -q -O /dev/null -t 1 http://localhost:${JMX_HTTP_PORT}
       interval: ${HEALTHCHECK_INTERVAL:-30s}
       timeout: ${HEALTHCHECK_TIMEOUT:-15s}
       retries: ${HEALTHCHECK_RETRIES:-10}
@@ -52,7 +52,7 @@ services:
       mode: replicated
       replicas: ${REPLICAS:-1}
       restart_policy:
-        delay: ${RESTART_DELAY:-30s}
+        delay: ${RESTART_DELAY:-10s}
       update_config:
         delay: ${UPDATE_DELAY:-5m}
 
@@ -69,13 +69,13 @@ networks:
 
 volumes:
   kf-secrets-vol:
-    name: ${KF_SECRETS_VOL_NAME:-kf-2-secrets-vol}
+    name: ${KF_2_SECRETS_VOL_NAME}
 
 configs:
   jmx-prometheus-javaagent:
-    name: ${JMX_PROMETHEUS_JAVA_AGENT_NAME:-jmx-prometheus-javaagent-0.11.0}
+    name: ${JMX_PROMETHEUS_JAVA_AGENT_NAME}
     external: true
 
   jmx-prometheus-config:
-    name: ${JMX_PROMETHEUS_CONFIG_NAME:-jmx-prometheus-config-0.11.0}
+    name: ${JMX_PROMETHEUS_CONFIG_NAME}
     external: true

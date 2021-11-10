@@ -19,9 +19,9 @@ services:
 
 volumes:
   kf-data-vol:
-    name: ${KF_DATA_VOL_NAME:-kf-3-data-vol}
+    name: ${KF_3_DATA_VOL_NAME}
     driver: 'cloudstor:aws'
     driver_opts:
       backing: relocatable
-      size: ${KF_DATA_VOL_SIZE:-500}
-      ebstype: ${KF_DATA_VOL_EBS_TYPE:-st1}
+      size: ${KF_DATA_VOL_SIZE}
+      ebstype: ${KF_DATA_VOL_EBS_TYPE}
