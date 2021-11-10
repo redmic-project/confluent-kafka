@@ -68,11 +68,16 @@ stages:
     <<: *deploy-kf-3-variables
 
 .deploy-support-branch: &deploy-support-branch
-  only:
-    - branches
-  except:
-    - master
-    - schedules
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_COMMIT_BRANCH == "master" ||
+          $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
 
 deploy-kf-1-support-branch-development:
   extends: .deploy-kf-1-development
@@ -87,10 +92,15 @@ deploy-kf-3-support-branch-development:
   <<: *deploy-support-branch
 
 .deploy-stable-branch: &deploy-stable-branch
-  only:
-    - master
-  except:
-    - schedules
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master" ||
+          $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: true
 
 deploy-kf-1-stable-branch-development:
   extends: .deploy-kf-1-development
@@ -117,8 +127,10 @@ deploy-kf-3-stable-branch-production:
   <<: *deploy-stable-branch
 
 .deploy-tag: &deploy-tag
-  only:
-    - tags
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      allow_failure: true
 
 deploy-kf-1-tag-development:
   extends: .deploy-kf-1-development
