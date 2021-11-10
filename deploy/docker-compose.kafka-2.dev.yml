@@ -3,28 +3,19 @@ version: '3.5'
 services:
   kafka-2:
     environment:
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:${KF_PORT},EXT://${PUBLIC_HOSTNAME}:2${KF_PORT}
-      - KAFKA_LISTENERS=PLAINTEXT://:${KF_PORT},EXT://0.0.0.0:${KF_PORT_EXT}
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXT:PLAINTEXT
-      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_HEAP_OPTS=-Xmx1g -Xms1g
-    ports:
-      - target: ${KF_PORT_EXT}
-        published: 2${KF_PORT}
-        mode: host
+      KAFKA_HEAP_OPTS: -Xmx1g -Xms1g
     deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        delay: 30s
-        window: 2m
+      placement:
+        constraints:
+          - node.hostname == ${KF_2_PLACEMENT_CONSTRAINTS_NODE_HOSTNAME:-hostname}
       resources:
         limits:
-          cpus: '1'
-          memory: 2G
+          cpus: '${RESOURCES_LIMITS_CPUS:-1}'
+          memory: ${RESOURCES_LIMITS_MEMORY:-2G}
         reservations:
-          memory: 1639M
+          cpus: '${RESOURCES_RESERVATIONS_CPUS:-0.2}'
+          memory: ${RESOURCES_RESERVATIONS_MEMORY:-1639M}
 
 volumes:
   kf-data-vol:
-    name: ${KF_DATA_VOL_NAME:-kf-2-data-vol}
+    name: ${KF_2_DATA_VOL_NAME}

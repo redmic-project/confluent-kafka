@@ -1,227 +1,157 @@
+include:
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/_deployment.yml'
+
 stages:
   - deploy
 
-image: registry.gitlab.com/redmic-project/docker/docker-deploy:${DOCKER_DEPLOY_IMAGE_TAG}
-
-services:
-  - docker:dind
-
-variables:
-  DOCKER_DRIVER: overlay2
-  STACK: confluent
-
-deploy-kf-1-supporting-branch-develop:
-  stage: deploy
+.deploy:
   variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '1'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
-  environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    STACK: confluent
+    DD_AWS_REGION: ${AWS_REGION}
 
-deploy-kf-2-supporting-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '2'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
+.deploy-development:
   environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    name: dev/${SERVICE_NAME}
 
-deploy-kf-3-supporting-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '3'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
+.deploy-production:
   environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    name: pro/${SERVICE_NAME}
 
-deploy-kf-1-stable-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '1'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
-  environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+.deploy-kf-1:
+  variables: &deploy-kf-1-variables
+    SERVICE_NAME: kf-1
 
-deploy-kf-2-stable-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '2'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
-  environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+.deploy-kf-2:
+  variables: &deploy-kf-2-variables
+    SERVICE_NAME: kf-2
 
-deploy-kf-3-stable-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    INSTANCE_ID: '3'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${DEV_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.dev.yml
-    PUBLIC_HOSTNAME: ${DEV_PUBLIC_HOSTNAME}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} PUBLIC_HOSTNAME=${PUBLIC_HOSTNAME}
-  environment:
-    name: dev/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+.deploy-kf-3:
+  variables: &deploy-kf-3-variables
+    SERVICE_NAME: kf-3
 
-deploy-kf-1-supporting-branch-production:
-  stage: deploy
+.deploy-kf-1-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '1'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-1.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-1.dev.yml
+    <<: *deploy-kf-1-variables
 
-deploy-kf-2-supporting-branch-production:
-  stage: deploy
+.deploy-kf-2-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '2'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-2.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-2.dev.yml
+    <<: *deploy-kf-2-variables
 
-deploy-kf-3-supporting-branch-production:
-  stage: deploy
+.deploy-kf-3-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '3'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - branches
-  except:
-    - master
-  when: manual
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-3.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-3.dev.yml
+    <<: *deploy-kf-3-variables
+
+.deploy-kf-1-production:
+  extends: .deploy-production
+  variables:
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-1.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-1.prod.yml
+    <<: *deploy-kf-1-variables
+
+.deploy-kf-2-production:
+  extends: .deploy-production
+  variables:
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-2.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-2.prod.yml
+    <<: *deploy-kf-2-variables
+
+.deploy-kf-3-production:
+  extends: .deploy-production
+  variables:
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-3.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-3.prod.yml
+    <<: *deploy-kf-3-variables
+
+.deploy-support-branch: &deploy-support-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_COMMIT_BRANCH == "master" ||
+          $CI_COMMIT_BRANCH == "main"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
+
+deploy-kf-1-support-branch-development:
+  extends: .deploy-kf-1-development
+  <<: *deploy-support-branch
+
+deploy-kf-2-support-branch-development:
+  extends: .deploy-kf-2-development
+  <<: *deploy-support-branch
+
+deploy-kf-3-support-branch-development:
+  extends: .deploy-kf-3-development
+  <<: *deploy-support-branch
+
+.deploy-stable-branch: &deploy-stable-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master" ||
+          $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: true
+
+deploy-kf-1-stable-branch-development:
+  extends: .deploy-kf-1-development
+  <<: *deploy-stable-branch
+
+deploy-kf-2-stable-branch-development:
+  extends: .deploy-kf-2-development
+  <<: *deploy-stable-branch
+
+deploy-kf-3-stable-branch-development:
+  extends: .deploy-kf-3-development
+  <<: *deploy-stable-branch
 
 deploy-kf-1-stable-branch-production:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '1'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+  extends: .deploy-kf-1-production
+  <<: *deploy-stable-branch
 
 deploy-kf-2-stable-branch-production:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '2'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+  extends: .deploy-kf-2-production
+  <<: *deploy-stable-branch
 
 deploy-kf-3-stable-branch-production:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    INSTANCE_ID: '3'
-    SERVICES_TO_CHECK: ${STACK}_${CI_PROJECT_NAME}-${INSTANCE_ID}
-    IMAGE_TAG: ${PRO_CONFLUENT_VERSION}
-    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-${INSTANCE_ID}.prod.yml
-    AWS_REGION: ${AWS_REGION}
-  script:
-    - deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} AWS_REGION=${AWS_REGION}
-  environment:
-    name: pro/${CI_PROJECT_NAME}-${INSTANCE_ID}
-  only:
-    - master
-  when: manual
+  extends: .deploy-kf-3-production
+  <<: *deploy-stable-branch
+
+.deploy-tag: &deploy-tag
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      allow_failure: true
+
+deploy-kf-1-tag-development:
+  extends: .deploy-kf-1-development
+  <<: *deploy-tag
+
+deploy-kf-2-tag-development:
+  extends: .deploy-kf-2-development
+  <<: *deploy-tag
+
+deploy-kf-3-tag-development:
+  extends: .deploy-kf-3-development
+  <<: *deploy-tag
+
+deploy-kf-1-tag-production:
+  extends: .deploy-kf-1-production
+  <<: *deploy-tag
+
+deploy-kf-2-tag-production:
+  extends: .deploy-kf-2-production
+  <<: *deploy-tag
+
+deploy-kf-3-tag-production:
+  extends: .deploy-kf-3-production
+  <<: *deploy-tag
